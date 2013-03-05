@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 from restkit import Resource
 
@@ -11,7 +12,15 @@ def parse(blob):
         if kv != ['']:
             yield kv
 
+
+def fetch(url):
+    resp = r.get(url)
+    for kv in parse(resp.body_string()):
+        yield kv
+
+
 if __name__ == '__main__':
-    resp = r.get('Status_Wireless.live.asp')
-    for k, v in parse(resp.body_string()):
+    for k, v in fetch('Status_Wireless.live.asp'):
+        print k, v
+    for k, v in fetch('Status_Lan.live.asp'):
         print k, v
