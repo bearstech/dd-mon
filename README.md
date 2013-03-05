@@ -1,9 +1,9 @@
 DD-Mon
 ======
 
-Fetch data from your favorite _dd-wrt_ box.
+Fetch data from your favorite [dd-wrt](http://www.dd-wrt.com/site/index) box.
 
-For now, it's a POC, soon, it will push data to _graphite_
+For now, it's a POC, soon, it will push data to [graphite](http://graphite.wikidot.com/)
 
 Test it
 -------
