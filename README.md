@@ -9,7 +9,7 @@ Test it
 -------
 
     export DD_URL=http://root:toto@192.168.11.1
-    ./client.py
+    python src/ddmon/__init__.py
 
 Licence
 -------
