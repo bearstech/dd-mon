@@ -1,9 +1,20 @@
 #!/usr/bin/env python
-import os
-from restkit import Resource
+import requests
 
 
-r = Resource(os.environ['DD_URL'])
+class DD(object):
+
+    def __init__(self, address, user, password):
+        self.address = address
+        self.user = user
+        self.password = password
+
+    def fetch(self, page):
+        r = requests.get("%s/%s.asp" % (self.address, page), auth=(self.user, self.password))
+        for line in r.text.split("\n"):
+            kv = line[1:-1].split('::', 2)
+            if kv != ['']:
+                yield kv
 
 
 def parse(blob):
@@ -20,7 +31,12 @@ def fetch(url):
 
 
 if __name__ == '__main__':
-    for k, v in fetch('Status_Wireless.live.asp'):
+    import os
+    from urlparse import urlparse
+
+    b = urlparse(os.environ['DD_URL'])
+    dd = DD('%s://%s%s' % (b.scheme, b.hostname, b.path), b.username, b.password)
+    for k, v in dd.fetch('Status_Wireless.live'):
         print k, v
-    for k, v in fetch('Status_Lan.live.asp'):
+    for k, v in dd.fetch('Status_Lan.live'):
         print k, v
