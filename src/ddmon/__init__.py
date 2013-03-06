@@ -17,19 +17,6 @@ class DD(object):
                 yield kv
 
 
-def parse(blob):
-    for line in blob.split('\n'):
-        kv = line[1:-1].split('::', 2)
-        if kv != ['']:
-            yield kv
-
-
-def fetch(url):
-    resp = r.get(url)
-    for kv in parse(resp.body_string()):
-        yield kv
-
-
 if __name__ == '__main__':
     import os
     from urlparse import urlparse
