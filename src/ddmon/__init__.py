@@ -7,6 +7,7 @@ class DD(object):
         self.address = address
         self.user = user
         self.password = password
+        self.data = {}
 
     def fetch(self, page):
         r = requests.get("%s/%s.live.asp" % (self.address, page), auth=(self.user, self.password))
@@ -15,6 +16,57 @@ class DD(object):
             if kv != ['']:
                 yield kv
 
+    def clear(self):
+        self.data = {}
+
+    def refresh(self, page):
+        self.data[page] = {}
+        for k, v in self.fetch(page):
+            self.data[page][k] = v
+
+    def wireless_clients(self):
+        d = self.data['Status_Wireless']['active_wireless'].split(',')
+        l = len(d) / 9
+        for a in range(l):
+            (mac, interface, uptime, tx, rx, signal, noise, SNR, stuff) = d[a * 9:a * 9 + 9]
+            signal = unquoteint(signal)
+            noise = unquoteint(noise)
+            SNR = unquoteint(SNR)
+            yield unquote(mac), {
+                        'if': unquote(interface),
+                        'uptime': unquote(uptime),
+                        'tx': ununit(unquote(tx)),
+                        'rx': ununit(unquote(rx)),
+                        'signal': signal,
+                        'noise': noise,
+                        'SNR': SNR,
+                        'quality': int(round(signal * 1.0 / noise * SNR))
+                        }
+
+
+def unquote(txt):
+    if txt[0] == "'":
+        start = 1
+    else:
+        start = 0
+    if txt[-1] == "'":
+        return txt[start:-1]
+    else:
+        return txt[start:]
+
+
+def unquoteint(txt):
+    return int(unquote(txt))
+
+
+def ununit(txt):
+    if txt[-1] == 'K':
+        return int(txt[:-1]) * 1000
+    if txt[-1] == 'M':
+        return int(txt[:-1]) * 1000000
+    if txt[-1] == 'G':
+        return int(txt[:-1]) * 1000000000
+    raise Exception("Unknown unit")
 
 if __name__ == '__main__':
     import os
@@ -22,6 +74,9 @@ if __name__ == '__main__':
 
     b = urlparse(os.environ['DD_URL'])
     dd = DD('%s://%s%s' % (b.scheme, b.hostname, b.path), b.username, b.password)
-    for page in ['Status_Router', 'Status_Internet', 'Info', 'Status_Wireless', 'Status_Lan']:
-        for k, v in dd.fetch(page):
-            print k, v
+    #for page in ['Status_Router', 'Status_Internet', 'Info', 'Status_Wireless', 'Status_Lan']:
+        #for k, v in dd.fetch(page):
+            #print k, "\n\t", v
+    dd.refresh('Status_Wireless')
+    for mac, values in dd.wireless_clients():
+        print mac, values
