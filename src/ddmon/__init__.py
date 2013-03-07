@@ -40,7 +40,7 @@ class DD(object):
                         'signal': signal,
                         'noise': noise,
                         'SNR': SNR,
-                        'quality': int(round(signal * 1.0 / noise * SNR))
+                        'quality': round(signal * 1.0 / noise * SNR, 1)
                         }
 
 
