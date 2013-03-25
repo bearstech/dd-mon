@@ -1,5 +1,3 @@
-from cStringIO import StringIO
-from csv import reader
 import requests
 
 
