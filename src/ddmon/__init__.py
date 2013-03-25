@@ -1,3 +1,5 @@
+from cStringIO import StringIO
+from csv import reader
 import requests
 
 
@@ -25,23 +27,22 @@ class DD(object):
             self.data[page][k] = v
 
     def wireless_clients(self):
-        d = self.data['Status_Wireless']['active_wireless'].split(',')
-        l = len(d) / 9
-        for a in range(l):
-            (mac, interface, uptime, tx, rx, signal, noise, SNR, stuff) = d[a * 9:a * 9 + 9]
-            signal = unquoteint(signal)
-            noise = unquoteint(noise)
+        d = self.data['Status_Wireless']['active_wireless'][1:-1].split("','")
+        for a in range(0, len(d) - 9, 9):
+            (mac, interface, uptime, tx, rx, signal, noise, SNR, stuff) = d[a :a + 9]
+            signal = ununit(unquote(signal))
+            noise = ununit(unquote(noise))
             SNR = unquoteint(SNR)
             yield unquote(mac), {
-                        'if': unquote(interface),
-                        'uptime': unquote(uptime),
-                        'tx': ununit(unquote(tx)),
-                        'rx': ununit(unquote(rx)),
-                        'signal': signal,
-                        'noise': noise,
-                        'SNR': SNR,
-                        'quality': round(signal * 1.0 / noise * SNR, 1)
-                        }
+                'if': unquote(interface),
+                'uptime': unquote(uptime),
+                'tx': unquote(tx),
+                'rx': unquote(rx),
+                'signal': signal,
+                'noise': noise,
+                'SNR': SNR,
+                'quality': round(signal * 1.0 / noise * SNR, 1)
+            }
 
 
 def unquote(txt):
@@ -60,13 +61,16 @@ def unquoteint(txt):
 
 
 def ununit(txt):
-    if txt[-1] == 'K':
-        return int(txt[:-1]) * 1000
-    if txt[-1] == 'M':
-        return int(txt[:-1]) * 1000000
-    if txt[-1] == 'G':
-        return int(txt[:-1]) * 1000000000
-    raise Exception("Unknown unit")
+    try:
+        return int(txt)
+    except ValueError:
+        if txt[-1] == 'K':
+            return int(txt[:-1]) * 1000
+        if txt[-1] == 'M':
+            return int(txt[:-1]) * 1000000
+        if txt[-1] == 'G':
+            return int(txt[:-1]) * 1000000000
+        raise Exception("Unknown unit : %s" % txt[-1])
 
 if __name__ == '__main__':
     import os
@@ -80,3 +84,4 @@ if __name__ == '__main__':
     dd.refresh('Status_Wireless')
     for mac, values in dd.wireless_clients():
         print mac, values
+        print
